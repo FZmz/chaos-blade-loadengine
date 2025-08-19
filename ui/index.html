@@ -183,6 +183,11 @@
                   <label>JVM堆大小</label>
                   <input type="text" id="heapSize" value="1g"/>
                 </div>
+                <div>
+                  <label>持续时间(秒)</label>
+                  <input type="number" id="duration" min="1" placeholder="不填则按脚本/超时兜底"/>
+                  <div class="hint">用于运行时改写JMX的 ThreadGroup.duration，并按时优雅停止</div>
+                </div>
               </div>
 
               <div>
@@ -553,6 +558,7 @@
         loops: Number(byId('loops').value || 1),
         rampUp: Number(byId('rampUp').value || 0),
         timeout: Number(byId('timeout').value || 3600),
+        duration: (byId('duration').value ? Number(byId('duration').value) : undefined),
         heapSize: byId('heapSize').value.trim() || '1g',
         properties: collectKV('props'),
         jvmArgs: collectKV('jvms')

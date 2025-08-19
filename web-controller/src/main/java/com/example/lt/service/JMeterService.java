@@ -7,14 +7,10 @@ import com.example.lt.model.TestExecution;
 import com.example.lt.model.TestExecutionRequest;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +27,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.StandardOpenOption;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class JMeterService implements InitializingBean {
@@ -86,13 +84,23 @@ public class JMeterService implements InitializingBean {
             execution.setReportPath(reportRel);
             execution.setLogPath(outputDir + "/jmeter.log");
 
+            // 如指定 duration，则生成运行时 JMX 副本并替换配置
+            String jmxRel = request.getDuration() != null && request.getDuration() > 0
+                    ? prepareRuntimeJmx(request.getTestPlanPath(), outputDir, request.getDuration())
+                    : request.getTestPlanPath();
+
             // 创建并启动容器
-            String containerId = createAndStartContainer(request, executionId, outputDir);
+            String containerId = createAndStartContainer(request, executionId, outputDir, jmxRel);
             execution.setContainerId(containerId);
             execution.setContainerName(appConfig.getJmeter().getContainerNamePrefix() + "-" + executionId);
             execution.setStatus(TestExecution.TestStatus.RUNNING);
 
             runningTests.put(executionId, execution);
+
+            // 外部兜底：如设置了 duration，到时优雅停止
+            if (request.getDuration() != null && request.getDuration() > 0) {
+                scheduleAutoStop(executionId, request.getDuration());
+            }
 
             // 异步监控容器状态
             monitorContainerAsync(execution);
@@ -136,11 +144,75 @@ public class JMeterService implements InitializingBean {
         return outputDir;
     }
 
-    private String createAndStartContainer(TestExecutionRequest request, String executionId, String outputDir) {
+    private String prepareRuntimeJmx(String srcRel, String outputDirRel, int durationSecs) throws IOException {
+        java.nio.file.Path src = Paths.get(appConfig.getDataDir(), srcRel);
+        String runtimeRel = outputDirRel + "/plan.runtime.jmx";
+        java.nio.file.Path dst = Paths.get(appConfig.getDataDir(), runtimeRel);
+        String xml = Files.readString(src, StandardCharsets.UTF_8);
+
+        // 针对每个标准 ThreadGroup 做块级替换/插入
+        Pattern tgPattern = Pattern.compile("(?s)<ThreadGroup\\b.*?</ThreadGroup>");
+        Matcher matcher = tgPattern.matcher(xml);
+        StringBuffer sb = new StringBuffer();
+        String d = Integer.toString(durationSecs);
+        while (matcher.find()) {
+            String block = matcher.group();
+            String b2 = block;
+            // scheduler=false -> true
+            b2 = b2.replaceAll(
+                "<boolProp\\s+name=\"ThreadGroup\\.scheduler\">\\s*false\\s*</boolProp>",
+                "<boolProp name=\"ThreadGroup.scheduler\">true</boolProp>");
+            if (!b2.contains("ThreadGroup.scheduler")) {
+                b2 = b2.replace("</ThreadGroup>",
+                        "  <boolProp name=\"ThreadGroup.scheduler\">true</boolProp>\n</ThreadGroup>");
+            }
+            // duration (longProp / stringProp)
+            b2 = b2.replaceAll(
+                "<longProp\\s+name=\"ThreadGroup\\.duration\">[^<]*</longProp>",
+                "<longProp name=\"ThreadGroup.duration\">" + d + "</longProp>");
+            b2 = b2.replaceAll(
+                "<stringProp\\s+name=\"ThreadGroup\\.duration\">[^<]*</stringProp>",
+                "<stringProp name=\"ThreadGroup.duration\">" + d + "</stringProp>");
+            if (!b2.contains("ThreadGroup.duration")) {
+                b2 = b2.replace("</ThreadGroup>",
+                        "  <stringProp name=\"ThreadGroup.duration\">" + d + "</stringProp>\n</ThreadGroup>");
+            }
+            // delay -> 0（可选）
+            b2 = b2.replaceAll(
+                "<(stringProp|longProp)\\s+name=\"ThreadGroup\\.delay\">[^<]*</(stringProp|longProp)>",
+                "<stringProp name=\"ThreadGroup.delay\">0</stringProp>");
+
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(b2));
+        }
+        matcher.appendTail(sb);
+
+        Files.writeString(dst, sb.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        return runtimeRel;
+    }
+
+    private void scheduleAutoStop(String executionId, int seconds) {
+        CompletableFuture.delayedExecutor(seconds, TimeUnit.SECONDS).execute(() -> {
+            try {
+                TestExecution exec = runningTests.get(executionId);
+                if (exec == null) return;
+                TestExecution.TestStatus st = exec.getStatus();
+                if (st == TestExecution.TestStatus.RUNNING) {
+                    logger.info("达到duration阈值，自动优雅停止测试: {}", executionId);
+                    stopTest(executionId);
+                } else {
+                    logger.info("自动停止跳过，状态为: {} ({})", st, executionId);
+                }
+            } catch (Exception e) {
+                logger.warn("自动停止执行异常: {}", e.getMessage());
+            }
+        });
+    }
+
+    private String createAndStartContainer(TestExecutionRequest request, String executionId, String outputDir, String jmxRel) {
         String containerName = appConfig.getJmeter().getContainerNamePrefix() + "-" + executionId;
 
         // 构建JMeter命令
-        List<String> command = buildJMeterCommand(request, outputDir);
+        List<String> command = buildJMeterCommand(request, outputDir, jmxRel);
         logger.info("JMeter CMD: {}", String.join(" ", command));
 
         // 创建容器
@@ -161,12 +233,12 @@ public class JMeterService implements InitializingBean {
         return container.getId();
     }
 
-    private List<String> buildJMeterCommand(TestExecutionRequest request, String outputDir) {
+    private List<String> buildJMeterCommand(TestExecutionRequest request, String outputDir, String jmxRel) {
         List<String> command = new ArrayList<>();
         // 不要添加 "jmeter"；justb4/jmeter 镜像的 ENTRYPOINT 已是 jmeter
         command.add("-n"); // 非GUI模式
         command.add("-t");
-        command.add("/data/" + request.getTestPlanPath());
+        command.add("/data/" + jmxRel);
         command.add("-l");
         command.add("/data/" + outputDir + "/results.jtl");
         command.add("-j");
@@ -197,7 +269,10 @@ public class JMeterService implements InitializingBean {
         if (request.getRampUp() >= 0) {
             command.add("-JrampUp=" + request.getRampUp());
         }
-        if (request.getTimeout() > 0) {
+        if (request.getDuration() != null && request.getDuration() > 0) {
+            command.add("-Jduration=" + request.getDuration());
+        } else if (request.getTimeout() > 0) {
+            // 兼容旧脚本：未指定 duration 时，用 timeout 作为 JMeter 脚本内的 duration 变量
             command.add("-Jduration=" + request.getTimeout());
         }
 
@@ -216,6 +291,7 @@ public class JMeterService implements InitializingBean {
         params.put("threads", request.getThreads());
         params.put("loops", request.getLoops());
         params.put("rampUp", request.getRampUp());
+        params.put("duration", request.getDuration());
         params.put("timeout", request.getTimeout());
         params.put("heapSize", request.getHeapSize());
         if (request.getProperties() != null) {
