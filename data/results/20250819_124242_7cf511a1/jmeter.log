@@ -104,3 +104,56 @@
 2025-08-19 14:44:00,054 INFO o.a.j.r.Summariser: summary =    864 in 00:01:12 =   12.0/s Avg:   326 Min:     7 Max:  1486 Err:     0 (0.00%)
 2025-08-19 14:44:30,085 INFO o.a.j.r.Summariser: summary +    367 in 00:00:30 =   12.2/s Avg:   348 Min:     6 Max:  1393 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
 2025-08-19 14:44:30,085 INFO o.a.j.r.Summariser: summary =   1231 in 00:01:42 =   12.1/s Avg:   333 Min:     6 Max:  1486 Err:     0 (0.00%)
+2025-08-19 14:44:48,515 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-2
+2025-08-19 14:44:48,563 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: Thread Group 1-1
+2025-08-19 14:44:48,563 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-1
+2025-08-19 14:44:48,566 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-5
+2025-08-19 14:44:49,316 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: Thread Group 1-3
+2025-08-19 14:44:49,317 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-3
+2025-08-19 14:44:49,668 INFO o.a.j.t.JMeterThread: Stopping because end time detected by thread: Thread Group 1-4
+2025-08-19 14:44:49,668 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-4
+2025-08-19 14:44:49,668 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
+2025-08-19 14:44:49,669 INFO o.a.j.r.Summariser: summary +    240 in 00:00:20 =   12.3/s Avg:   337 Min:     7 Max:  1581 Err:     0 (0.00%) Active: 0 Started: 5 Finished: 5
+2025-08-19 14:44:49,669 INFO o.a.j.r.Summariser: summary =   1471 in 00:02:01 =   12.1/s Avg:   334 Min:     6 Max:  1581 Err:     0 (0.00%)
+2025-08-19 14:44:49,670 INFO o.a.j.JMeter: Generating Dashboard
+2025-08-19 14:44:49,670 INFO o.a.j.r.d.ReportGenerator: Flushing result collector before report Generation
+2025-08-19 14:44:49,686 INFO o.a.j.r.p.NormalizerSampleConsumer: Using format, 'ms', to parse timeStamp field
+2025-08-19 14:44:50,069 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.AggregateConsumer#stopProducing(): beginDate produced 0 samples
+2025-08-19 14:44:50,069 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.AggregateConsumer#stopProducing(): endDate produced 0 samples
+2025-08-19 14:44:50,073 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.ApdexSummaryConsumer#stopProducing(): apdexSummary produced 0 samples
+2025-08-19 14:44:50,073 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.RequestsSummaryConsumer#stopProducing(): requestsSummary produced 0 samples
+2025-08-19 14:44:50,084 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.StatisticsSummaryConsumer#stopProducing(): statisticsSummary produced 0 samples
+2025-08-19 14:44:50,105 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.Top5ErrorsBySamplerConsumer#stopProducing(): top5ErrorsBySampler produced 0 samples
+2025-08-19 14:44:50,105 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.ErrorsSummaryConsumer#stopProducing(): errorsSummary produced 0 samples
+2025-08-19 14:44:50,105 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.HitsPerSecondGraphConsumer#stopProducing(): hitsPerSecond produced 0 samples
+2025-08-19 14:44:50,230 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.LatencyVSRequestGraphConsumer#stopProducing(): latencyVsRequest produced 0 samples
+2025-08-19 14:44:50,231 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.SyntheticResponseTimeDistributionGraphConsumer#stopProducing(): syntheticResponseTimeDistribution produced 0 samples
+2025-08-19 14:44:50,232 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.BytesThroughputGraphConsumer#stopProducing(): bytesThroughputOverTime produced 0 samples
+2025-08-19 14:44:50,232 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.CodesPerSecondGraphConsumer#stopProducing(): codesPerSecond produced 0 samples
+2025-08-19 14:44:50,309 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeVSRequestGraphConsumer#stopProducing(): responseTimeVsRequest produced 0 samples
+2025-08-19 14:44:50,310 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): startIntervalControlerFilter produced 10297 samples
+2025-08-19 14:44:50,310 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TotalTPSGraphConsumer#stopProducing(): totalTPS produced 0 samples
+2025-08-19 14:44:50,310 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ActiveThreadsGraphConsumer#stopProducing(): activeThreadsOverTime produced 0 samples
+2025-08-19 14:44:50,310 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TimeVSThreadGraphConsumer#stopProducing(): timeVsThreads produced 0 samples
+2025-08-19 14:44:50,311 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeDistributionGraphConsumer#stopProducing(): responseTimeDistribution produced 0 samples
+2025-08-19 14:44:50,312 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TransactionsPerSecondGraphConsumer#stopProducing(): transactionsPerSecond produced 0 samples
+2025-08-19 14:44:50,312 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimePercentilesGraphConsumer#stopProducing(): responseTimePercentiles produced 0 samples
+2025-08-19 14:44:50,342 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimePercentilesOverTimeGraphConsumer#stopProducing(): responseTimePercentilesOverTime produced 0 samples
+2025-08-19 14:44:50,346 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeOverTimeGraphConsumer#stopProducing(): responseTimesOverTime produced 0 samples
+2025-08-19 14:44:50,346 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ConnectTimeOverTimeGraphConsumer#stopProducing(): connectTimeOverTime produced 0 samples
+2025-08-19 14:44:50,346 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.LatencyOverTimeGraphConsumer#stopProducing(): latenciesOverTime produced 0 samples
+2025-08-19 14:44:50,350 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): nameFilter produced 22065 samples
+2025-08-19 14:44:50,351 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): dateRangeFilter produced 4413 samples
+2025-08-19 14:44:50,352 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.NormalizerSampleConsumer#stopProducing(): normalizer produced 1471 samples
+2025-08-19 14:44:50,354 INFO o.a.j.r.p.CsvFileSampleSource: produce(): 1471 samples produced in 617ms on channel 0
+2025-08-19 14:44:50,354 INFO o.a.j.r.d.ReportGenerator: Exporting data using exporter:'json' of className:'org.apache.jmeter.report.dashboard.JsonExporter'
+2025-08-19 14:44:50,678 INFO o.a.j.r.d.JsonExporter: Found data for consumer statisticsSummary in context
+2025-08-19 14:44:50,678 INFO o.a.j.r.d.JsonExporter: Creating statistics for overall
+2025-08-19 14:44:50,679 INFO o.a.j.r.d.JsonExporter: Creating statistics for other transactions
+2025-08-19 14:44:50,680 INFO o.a.j.r.d.JsonExporter: Checking output folder
+2025-08-19 14:44:50,680 INFO o.a.j.r.d.JsonExporter: Writing statistics JSON to /data/reports/20250819_124242_7cf511a1/statistics.json
+2025-08-19 14:44:50,760 INFO o.a.j.r.d.ReportGenerator: Exporting data using exporter:'html' of className:'org.apache.jmeter.report.dashboard.HtmlTemplateExporter'
+2025-08-19 14:44:50,767 INFO o.a.j.r.d.HtmlTemplateExporter: Will generate dashboard in folder: /data/reports/20250819_124242_7cf511a1
+2025-08-19 14:44:51,108 INFO o.a.j.r.d.HtmlTemplateExporter: Report will be generated in: /data/reports/20250819_124242_7cf511a1, creating folder structure
+2025-08-19 14:44:51,121 INFO o.a.j.r.d.TemplateVisitor: Copying folder from '/opt/apache-jmeter-5.5/bin/report-template' to '/data/reports/20250819_124242_7cf511a1', got message: /data/reports/20250819_124242_7cf511a1, found non empty folder with following content [/data/reports/20250819_124242_7cf511a1/statistics.json], will be ignored
+2025-08-19 14:44:51,653 INFO o.a.j.JMeter: Dashboard generated
