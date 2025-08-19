@@ -257,6 +257,35 @@
           </div>
         </div>
       </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h2>实时监控</h2>
+        <div class="row">
+          <label>选择执行ID</label>
+          <select id="monitor-exec" class="grow"></select>
+          <button id="start-stream" class="primary">开始订阅</button>
+          <button id="stop-stream" class="ghost">停止</button>
+        </div>
+        <div class="grid cols-2" style="margin-top:10px">
+          <div>
+            <h3>响应时间趋势 (平均值)</h3>
+            <canvas id="rtChart" width="520" height="200" style="background:#0f1530;border:1px solid #22305e;border-radius:8px"></canvas>
+          </div>
+          <div>
+            <h3>成功/失败比例</h3>
+            <canvas id="pieChart" width="260" height="200" style="background:#0f1530;border:1px solid #22305e;border-radius:8px"></canvas>
+          </div>
+        </div>
+        <div class="grid cols-3" style="margin-top:10px">
+          <div class="chips"><span class="chip">线程 <span id="m-threads">-</span></span></div>
+          <div class="chips"><span class="chip">TPS <span id="m-tps">-</span></span></div>
+          <div class="chips"><span class="chip">已完成 <span id="m-total">-</span></span></div>
+          <div class="chips"><span class="chip">平均RT <span id="m-avg">-</span> ms</span></div>
+          <div class="chips"><span class="chip">最大RT <span id="m-max">-</span> ms</span></div>
+          <div class="chips"><span class="chip">最小RT <span id="m-min">-</span> ms</span></div>
+          <div class="chips"><span class="chip">错误率 <span id="m-err">-</span></span></div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -588,6 +617,9 @@
           </td>
           <td>${linkCell(x)}</td>
         </tr>
+
+
+
       `).join('');
       $$('.stop2').forEach(b=> b.onclick = async ()=>{
         if (!confirm('停止测试 ' + b.dataset.id + ' ?')) return;
@@ -605,6 +637,75 @@
         } catch(e){ toast('获取结果失败：' + e.message, 'error'); }
       });
     }
+
+    // ===== 实时监控（SSE） =====
+    var sseEvtSrc = null;
+    var rtData = [];
+    function drawLineChart(canvas, data){
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle = '#22305e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40,10); ctx.lineTo(40,180); ctx.lineTo(510,180); ctx.stroke();
+      if (!data.length) return;
+      var maxY = 1; for (var i=0;i<data.length;i++){ if ((data[i].avg||0) > maxY) maxY = data[i].avg; }
+      var minY = 0;
+      var pts = data.slice(-50);
+      var stepX = 470/Math.max(pts.length-1,1);
+      ctx.strokeStyle = '#7d9bff'; ctx.lineWidth = 2; ctx.beginPath();
+      for (var i=0;i<pts.length;i++){
+        var d = pts[i];
+        var x = 40 + i*stepX;
+        var y = 180 - ((d.avg-minY)/(maxY-minY))*160;
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    function drawPie(canvas, succ, err){
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      var total = Math.max(1, (succ||0)+(err||0));
+      var angErr = (err/total)*Math.PI*2;
+      ctx.beginPath(); ctx.moveTo(130,100); ctx.fillStyle = '#2ecc71'; ctx.arc(130,100,90, -Math.PI/2, -Math.PI/2 + (Math.PI*2 - angErr)); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(130,100); ctx.fillStyle = '#e74c3c'; ctx.arc(130,100,90, -Math.PI/2 + (Math.PI*2 - angErr), -Math.PI/2 + Math.PI*2); ctx.closePath(); ctx.fill();
+    }
+    async function populateExecOptions(){
+      try{
+        var r = await apiFetch('/loadtest/list');
+        var arr = (r.data || r || []).filter(function(x){ return x.status==='RUNNING'; });
+        var sel = byId('monitor-exec');
+        sel.innerHTML = arr.map(function(x){ return '<option value="'+x.executionId+'">'+x.executionId+' ('+(x.testName||'')+')</option>'; }).join('');
+      }catch(e){ /* ignore */ }
+    }
+    byId('monitor-exec').addEventListener('focus', populateExecOptions);
+    function startSSE(){
+      var id = byId('monitor-exec').value;
+      if (!id) { toast('请选择执行ID','error'); return; }
+      stopSSE();
+      var base = loadApiBase();
+      var url = base + '/metrics/stream/' + encodeURIComponent(id);
+      sseEvtSrc = new EventSource(url);
+      var rtCanvas = byId('rtChart');
+      var pieCanvas = byId('pieChart');
+      sseEvtSrc.onmessage = function(e){
+        try{
+          var d = JSON.parse(e.data);
+          byId('m-threads').textContent = String(d.activeThreads||0);
+          byId('m-tps').textContent = (d.throughput||0).toFixed(2);
+          byId('m-total').textContent = String(d.totalRequests||0);
+          byId('m-avg').textContent = (d.avgResponseTime||0).toFixed(1);
+          byId('m-max').textContent = String(d.maxResponseTime||0);
+          byId('m-min').textContent = String(d.minResponseTime||0);
+          byId('m-err').textContent = (((d.errorRate||0)*100).toFixed(2)) + '%';
+          rtData.push({t:d.timestamp, avg:d.avgResponseTime});
+          drawLineChart(rtCanvas, rtData);
+          drawPie(pieCanvas, d.successCount||0, d.errorCount||0);
+        }catch(err){ /* ignore */ }
+      };
+      sseEvtSrc.onerror = function(){ /* keep open */ };
+    }
+    function stopSSE(){ if (sseEvtSrc){ sseEvtSrc.close(); sseEvtSrc=null; } }
+    byId('start-stream').onclick = startSSE;
+    byId('stop-stream').onclick = stopSSE;
+
 
     // 首次加载
     refreshTests();

@@ -257,6 +257,35 @@
           </div>
         </div>
       </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h2>实时监控</h2>
+        <div class="row">
+          <label>选择执行ID</label>
+          <select id="monitor-exec" class="grow"></select>
+          <button id="start-stream" class="primary">开始订阅</button>
+          <button id="stop-stream" class="ghost">停止</button>
+        </div>
+        <div class="grid cols-2" style="margin-top:10px">
+          <div>
+            <h3>响应时间趋势 (平均值)</h3>
+            <canvas id="rtChart" width="520" height="200" style="background:#0f1530;border:1px solid #22305e;border-radius:8px"></canvas>
+          </div>
+          <div>
+            <h3>成功/失败比例</h3>
+            <canvas id="pieChart" width="260" height="200" style="background:#0f1530;border:1px solid #22305e;border-radius:8px"></canvas>
+          </div>
+        </div>
+        <div class="grid cols-3" style="margin-top:10px">
+          <div class="chips"><span class="chip">线程 <span id="m-threads">-</span></span></div>
+          <div class="chips"><span class="chip">TPS <span id="m-tps">-</span></span></div>
+          <div class="chips"><span class="chip">已完成 <span id="m-total">-</span></span></div>
+          <div class="chips"><span class="chip">平均RT <span id="m-avg">-</span> ms</span></div>
+          <div class="chips"><span class="chip">最大RT <span id="m-max">-</span> ms</span></div>
+          <div class="chips"><span class="chip">最小RT <span id="m-min">-</span> ms</span></div>
+          <div class="chips"><span class="chip">错误率 <span id="m-err">-</span></span></div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -569,6 +598,78 @@
     function renderTestsTable(arr) {
       const tb = byId('tests-table').querySelector('tbody');
       if (!arr || !arr.length) {
+    // ===== 实时监控（SSE） =====
+    let sseEvtSrc = null;
+    const rtData = [];
+    function drawLineChart(canvas, data){
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // axes
+      ctx.strokeStyle = '#22305e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40,10); ctx.lineTo(40,180); ctx.lineTo(510,180); ctx.stroke();
+      if (!data.length) return;
+      const maxY = Math.max(...data.map(d=>d.avg||0), 1);
+      const minY = 0;
+      const pts = data.slice(-50);
+      const stepX = (470)/(Math.max(pts.length-1,1));
+      ctx.strokeStyle = '#7d9bff'; ctx.lineWidth = 2; ctx.beginPath();
+      pts.forEach((d,i)=>{
+        const x = 40 + i*stepX;
+        const y = 180 - ((d.avg-minY)/(maxY-minY))*160;
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    }
+    function drawPie(canvas, succ, err){
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const total = Math.max(1, succ+err);
+      const angErr = (err/total)*Math.PI*2;
+      // success
+      ctx.beginPath(); ctx.moveTo(130,100); ctx.fillStyle = '#2ecc71'; ctx.arc(130,100,90, -Math.PI/2, -Math.PI/2 + (Math.PI*2 - angErr)); ctx.closePath(); ctx.fill();
+      // error
+      ctx.beginPath(); ctx.moveTo(130,100); ctx.fillStyle = '#e74c3c'; ctx.arc(130,100,90, -Math.PI/2 + (Math.PI*2 - angErr), -Math.PI/2 + Math.PI*2); ctx.closePath(); ctx.fill();
+    }
+
+    async function populateExecOptions(){
+      try{
+        const r = await apiFetch('/loadtest/list');
+        const arr = (r.data || r || []).filter(x=>x.status==='RUNNING');
+        const sel = byId('monitor-exec');
+        sel.innerHTML = arr.map(function(x){ return '<option value="'+x.executionId+'">'+x.executionId+' ('+(x.testName||'')+')</option>'; }).join('');
+      }catch(e){ /* ignore */ }
+    }
+    byId('monitor-exec').addEventListener('focus', populateExecOptions);
+
+    function startSSE(){
+      const id = byId('monitor-exec').value;
+      if (!id) return toast('请选择执行ID','error');
+      stopSSE();
+      const base = loadApiBase();
+      const url = `${base}/metrics/stream/${encodeURIComponent(id)}`;
+      sseEvtSrc = new EventSource(url);
+      const rtCanvas = byId('rtChart');
+      const pieCanvas = byId('pieChart');
+      sseEvtSrc.onmessage = (e)=>{
+        try{
+          const d = JSON.parse(e.data);
+          byId('m-threads').textContent = String(d.activeThreads||0);
+          byId('m-tps').textContent = (d.throughput||0).toFixed(2);
+          byId('m-total').textContent = String(d.totalRequests||0);
+          byId('m-avg').textContent = (d.avgResponseTime||0).toFixed(1);
+          byId('m-max').textContent = String(d.maxResponseTime||0);
+          byId('m-min').textContent = String(d.minResponseTime||0);
+          byId('m-err').textContent = ((d.errorRate||0)*100).toFixed(2) + '%';
+          rtData.push({t:d.timestamp, avg:d.avgResponseTime});
+          drawLineChart(rtCanvas, rtData);
+          drawPie(pieCanvas, d.successCount||0, d.errorCount||0);
+        }catch(err){ /* ignore */ }
+      };
+      sseEvtSrc.onerror = ()=>{ /* keep open or auto-reconnect by EventSource */ };
+    }
+    function stopSSE(){ if (sseEvtSrc){ sseEvtSrc.close(); sseEvtSrc=null; } }
+    byId('start-stream').onclick = startSSE;
+    byId('stop-stream').onclick = stopSSE;
+
         tb.innerHTML = `<tr><td colspan="7"><span class="muted">暂无执行记录</span></td></tr>`;
         return;
       }

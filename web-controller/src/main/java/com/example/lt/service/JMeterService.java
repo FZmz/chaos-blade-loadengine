@@ -169,10 +169,16 @@ public class JMeterService implements InitializingBean {
         command.add("-e"); command.add("-o"); command.add("/data/" + reportRel + "/");
         command.add("-f"); // 报告
 
-        // 确保 JTL 为 CSV，并打印表头、使用毫秒时间戳戳
+        // 确保 JTL 为 CSV，并打印表头、使用毫秒时间戳，字段齐全
         command.add("-Jjmeter.save.saveservice.output_format=csv");
         command.add("-Jjmeter.save.saveservice.print_field_names=true");
         command.add("-Jjmeter.save.saveservice.timestamp_format=ms");
+        command.add("-Jjmeter.save.saveservice.default_delimiter=,");
+        // 确保包含 allThreads (grpThreads/allThreads/Latency)
+        command.add("-Jjmeter.save.saveservice.latency=true");
+        command.add("-Jjmeter.save.saveservice.label=true");
+        command.add("-Jjmeter.save.saveservice.successful=true");
+        command.add("-Jjmeter.save.saveservice.thread_counts=true");
 
         // 将 UI 的线程/循环/RampUp/持续时间映射为 JMeter 属性（要求 .jmx 使用相同变量名）
         if (request.getThreads() > 0) {
@@ -306,12 +312,37 @@ public class JMeterService implements InitializingBean {
 
         try {
             if (execution.getContainerId() != null) {
-                dockerClient.stopContainerCmd(execution.getContainerId()).exec();
-                logger.info("JMeter容器停止: {}", execution.getContainerId());
+                String cid = execution.getContainerId();
+                try {
+                    // Try graceful stop: send SIGINT to allow JMeter to flush JTL and report phase to finish
+                    logger.info("尝试优雅停止容器 (SIGINT): {}", cid);
+                    dockerClient.killContainerCmd(cid).withSignal("SIGINT").exec();
+                } catch (Exception e) {
+                    logger.warn("发送SIGINT失败，继续 docker stop: {}", e.getMessage());
+                }
+                try {
+                    // wait a short grace period before force stop
+                    Thread.sleep(3000);
+                } catch (InterruptedException ignored) {}
+                try {
+                    logger.info("执行 docker stop --time=15: {}", cid);
+                    dockerClient.stopContainerCmd(cid).withTimeout(15).exec();
+                } catch (Exception e) {
+                    logger.warn("docker stop 失败，尝试 kill: {}", e.getMessage());
+                    try { dockerClient.killContainerCmd(cid).withSignal("KILL").exec(); } catch (Exception ignore) {}
+                }
+                try {
+                    // wait to ensure exit and file flush
+                    dockerClient.waitContainerCmd(cid).start().awaitStatusCode();
+                } catch (Exception ignore) {}
+                logger.info("JMeter容器已停止: {}", cid);
             }
 
             execution.setStatus(TestExecution.TestStatus.STOPPED);
             execution.setEndTime(LocalDateTime.now());
+
+            // 主动触发报告生成检查（而不仅依赖 finally 块）
+            generateReportIfMissing(execution);
 
             return true;
         } catch (Exception e) {

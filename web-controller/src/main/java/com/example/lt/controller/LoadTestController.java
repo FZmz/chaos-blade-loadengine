@@ -109,16 +109,16 @@ public class LoadTestController {
             results.put("reportPath", execution.getReportPath());
             results.put("logPath", execution.getLogPath());
             
-            // 构建访问URL
+            // 构建访问URL（静态资源由 Nginx 映射 /results 和 /reports）
             if (execution.getResultPath() != null) {
-                // resultPath格式: results/20231201_123456_abc12345/results.jtl
-                String resultFile = execution.getResultPath().replace("results/", "");
+                // 例如: results/20231201_123456_abc12345/results.jtl
+                String resultFile = execution.getResultPath().replaceFirst("^results/", "");
                 results.put("resultUrl", "/results/" + resultFile);
             }
             if (execution.getReportPath() != null) {
-                // reportPath格式: results/20231201_123456_abc12345/report
-                String reportDir = execution.getReportPath().replace("results/", "");
-                results.put("reportUrl", "/reports/" + reportDir + "/");
+                // 例如: reports/20231201_123456_abc12345/
+                String reportDir = execution.getReportPath().replaceFirst("^reports/", "");
+                results.put("reportUrl", "/reports/" + reportDir + "/index.html");
             }
             
             return ResponseEntity.ok(ApiResponse.success("获取测试结果成功", results));
