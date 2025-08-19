@@ -7,10 +7,14 @@ import com.example.lt.model.TestExecution;
 import com.example.lt.model.TestExecutionRequest;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.InitializingBean;
-import java.io.File;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -38,6 +43,8 @@ public class JMeterService implements InitializingBean {
 
     private DockerClient dockerClient;
     private final Map<String, TestExecution> runningTests = new ConcurrentHashMap<>();
+    // 防止并发重复生成报告：每个 executionId 一把锁
+    private final Map<String, Object> reportLocks = new ConcurrentHashMap<>();
 
     @Override
     public void afterPropertiesSet() {
@@ -244,63 +251,183 @@ public class JMeterService implements InitializingBean {
     }
 
     private void generateReportIfMissing(TestExecution execution) {
-        try {
-            String resultRel = execution.getResultPath();
-            String reportRel = execution.getReportPath();
-            if (resultRel == null || reportRel == null) {
-                logger.warn("缺少结果或报告路径，跳过后备报告生成: execId={}", execution.getExecutionId());
-                return;
-            }
-            File resultFile = new File(appConfig.getDataDir(), resultRel);
-            // 如果报告路径仍是 results/.../report（旧目录），改写为 /data/reports
-            if (reportRel.startsWith("results/")) {
-                reportRel = reportRel.replaceFirst("^results/", "reports/");
-            }
-            File reportDir = new File(appConfig.getDataDir(), reportRel);
-            if (!reportDir.exists()) { reportDir.mkdirs(); }
+        Object lock = reportLocks.computeIfAbsent(execution.getExecutionId(), k -> new Object());
+        synchronized (lock) {
+            try {
+                String resultRel = execution.getResultPath();
+                String reportRel = execution.getReportPath();
+                if (resultRel == null || reportRel == null) {
+                    logger.warn("缺少结果或报告路径，跳过后备报告生成: execId={}", execution.getExecutionId());
+                    return;
+                }
+                File resultFile = new File(appConfig.getDataDir(), resultRel);
+                if (reportRel.startsWith("results/")) {
+                    reportRel = reportRel.replaceFirst("^results/", "reports/");
+                }
+                File reportDir = new File(appConfig.getDataDir(), reportRel);
+                if (!reportDir.exists()) { reportDir.mkdirs(); }
 
-            if (!resultFile.exists() || resultFile.length() == 0) {
-                logger.warn("结果文件不存在或为空，无法生成HTML报告: {}", resultFile.getAbsolutePath());
-                return;
-            }
-            boolean reportOk = reportDir.exists() && reportDir.isDirectory() &&
-                    Optional.ofNullable(reportDir.list()).map(arr -> arr.length > 0).orElse(false);
-            if (reportOk) {
-                logger.info("报告目录已存在且非空，跳过后备报告生成: {}", reportDir.getAbsolutePath());
-                return;
-            }
+                if (!resultFile.exists() || resultFile.length() == 0) {
+                    logger.warn("结果文件不存在或为空，无法生成HTML报告: {}", resultFile.getAbsolutePath());
+                    return;
+                }
+                boolean reportOk = reportDir.exists() && reportDir.isDirectory() &&
+                        Optional.ofNullable(reportDir.list()).map(arr -> arr.length > 0).orElse(false);
+                if (reportOk) {
+                    logger.info("报告目录已存在且非空，跳过后备报告生成: {}", reportDir.getAbsolutePath());
+                    return;
+                }
 
-            // 使用独立容器执行仅生成报告的命令：jmeter -g <jtl> -o <report> -f
-            List<String> cmd = new ArrayList<>();
-            cmd.add("-g"); cmd.add("/data/" + resultRel);
-            cmd.add("-o"); cmd.add("/data/" + reportRel);
-            // 补偿时也强制写 CSV 参数，以防 result 是旧格式
-            cmd.add("-Jjmeter.save.saveservice.output_format=csv");
-            cmd.add("-Jjmeter.save.saveservice.print_field_names=true");
-            cmd.add("-Jjmeter.save.saveservice.timestamp_format=ms");
-            cmd.add("-f");
+                // 生成容器名称（唯一）
+                String name = appConfig.getJmeter().getContainerNamePrefix() + "-report-" + execution.getExecutionId();
 
-            String name = appConfig.getJmeter().getContainerNamePrefix() + "-report-" + execution.getExecutionId();
-            logger.info("启动后备报告生成容器: {} -> {}", name, String.join(" ", cmd));
+                // 安全创建并等待容器：
+                List<String> baseCmd = new ArrayList<>();
+                baseCmd.add("-Jjmeter.save.saveservice.output_format=csv");
+                baseCmd.add("-Jjmeter.save.saveservice.print_field_names=true");
+                baseCmd.add("-Jjmeter.save.saveservice.timestamp_format=ms");
+                baseCmd.add("-Jjmeter.save.saveservice.default_delimiter=,");
+                baseCmd.add("-f");
 
-            CreateContainerResponse c = dockerClient.createContainerCmd(appConfig.getJmeter().getImage())
-                    .withName(name)
-                    .withCmd(cmd)
-                    .withHostConfig(HostConfig.newHostConfig()
-                            .withBinds(Bind.parse(appConfig.getJmeter().getHostDataDir() + ":/data"))
-                            .withAutoRemove(true))
-                    .withWorkingDir("/data")
-                    .exec();
-            dockerClient.startContainerCmd(c.getId()).exec();
-            int rc = dockerClient.waitContainerCmd(c.getId()).start().awaitStatusCode();
-            if (rc == 0) {
-                logger.info("后备报告生成成功: {}", reportDir.getAbsolutePath());
-            } else {
-                logger.warn("后备报告生成失败，退出码: {}", rc);
+                List<String> cmd = new ArrayList<>();
+                cmd.add("-g"); cmd.add("/data/" + resultRel);
+                cmd.add("-o"); cmd.add("/data/" + reportRel);
+                cmd.addAll(baseCmd);
+
+                logger.info("启动后备报告生成容器: {} -> {}", name, String.join(" ", cmd));
+                CreateContainerResponse c;
+                try {
+                    c = dockerClient.createContainerCmd(appConfig.getJmeter().getImage())
+                            .withName(name)
+                            .withCmd(cmd)
+                            .withHostConfig(HostConfig.newHostConfig()
+                                    .withBinds(Bind.parse(appConfig.getJmeter().getHostDataDir() + ":/data"))
+                                    .withAutoRemove(false))
+                            .withWorkingDir("/data")
+                            .exec();
+                } catch (com.github.dockerjava.api.exception.ConflictException conflict) {
+                    logger.warn("发现同名报告容器正在运行，等待其完成: {}", name);
+                    try {
+                        String containerId = dockerClient.listContainersCmd().withShowAll(true).exec().stream()
+                                .filter(ci -> Arrays.asList(ci.getNames()).contains("/" + name))
+                                .map(ci -> ci.getId()).findFirst().orElse(null);
+                        if (containerId != null) {
+                            try { dockerClient.waitContainerCmd(containerId).start().awaitStatusCode(); } catch (Exception ignore) {}
+                            logger.info("已有报告容器执行完成: {}", name);
+                        } else {
+                            logger.warn("同名容器未查询到ID，可能已退出");
+                        }
+                    } catch (Exception e2) {
+                        logger.warn("等待同名报告容器完成时异常: {}", e2.getMessage());
+                    }
+                    return; // 让先启动的容器负责生成，当前调用直接返回
+                }
+
+                dockerClient.startContainerCmd(c.getId()).exec();
+                int rc = dockerClient.waitContainerCmd(c.getId()).start().awaitStatusCode();
+                if (rc == 0) {
+                    logger.info("后备报告生成成功: {}", reportDir.getAbsolutePath());
+                } else {
+                    logger.warn("后备报告生成失败，退出码: {}", rc);
+
+                    // 如果失败且可能是列不匹配，尝试自动清洗并重试
+                    String logs = tryFetchLogs(c.getId());
+                    if (logs != null && logs.contains("Mismatch between expected number of columns")) {
+                        File cleaned = new File(resultFile.getParentFile(), "results.cleaned.jtl");
+                        int[] stats = cleanCsvByColumnCount(resultFile, cleaned);
+                        logger.warn("检测到列不匹配，已清洗CSV：保留{}行，丢弃{}行，准备重试生成报告", stats[0], stats[1]);
+
+                        List<String> retryCmd = new ArrayList<>();
+                        retryCmd.add("-g"); retryCmd.add("/data/" + resultRel.replace("results.jtl","results.cleaned.jtl"));
+                        retryCmd.add("-o"); retryCmd.add("/data/" + reportRel);
+                        retryCmd.addAll(baseCmd);
+
+                        String name2 = name + "-retry";
+                        logger.info("启动清洗后重试容器: {} -> {}", name2, String.join(" ", retryCmd));
+                        CreateContainerResponse c2 = dockerClient.createContainerCmd(appConfig.getJmeter().getImage())
+                                .withName(name2)
+                                .withCmd(retryCmd)
+                                .withHostConfig(HostConfig.newHostConfig()
+                                        .withBinds(Bind.parse(appConfig.getJmeter().getHostDataDir() + ":/data"))
+                                        .withAutoRemove(false))
+                                .withWorkingDir("/data")
+                                .exec();
+                        dockerClient.startContainerCmd(c2.getId()).exec();
+                        int rc2 = dockerClient.waitContainerCmd(c2.getId()).start().awaitStatusCode();
+                        if (rc2 == 0) {
+                            logger.info("清洗后重试生成报告成功: {}", reportDir.getAbsolutePath());
+                            try { cleaned.delete(); } catch (Exception ignore) {}
+                        } else {
+                            logger.error("清洗后重试仍失败，退出码: {}", rc2);
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                logger.error("后备报告生成异常", ex);
             }
-        } catch (Exception ex) {
-            logger.error("后备报告生成异常", ex);
         }
+    }
+
+    // 读取容器日志的一个小工具方法
+    private String tryFetchLogs(String containerId) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            dockerClient.logContainerCmd(containerId).withStdOut(true).withStdErr(true).withTail(500)
+                    .exec(new com.github.dockerjava.core.command.LogContainerResultCallback() {
+                        @Override public void onNext(com.github.dockerjava.api.model.Frame item) {
+                            sb.append(new String(item.getPayload()));
+                        }
+                    }).awaitCompletion();
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // 清洗 CSV：按表头列数保留，列数不一致的行丢弃
+    // 返回 [kept, dropped]
+    private int[] cleanCsvByColumnCount(File src, File dst) {
+        int kept = 0, dropped = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(src));
+             BufferedWriter bw = new BufferedWriter(new FileWriter(dst))) {
+            String header = br.readLine();
+            if (header == null) return new int[]{0,0};
+            bw.write(header); bw.newLine();
+            int expected = splitCsv(header).size();
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) { dropped++; continue; }
+                List<String> cols = splitCsv(line);
+                if (cols.size() == expected) { bw.write(line); bw.newLine(); kept++; }
+                else { dropped++; }
+            }
+        } catch (Exception e) {
+            logger.error("清洗CSV失败", e);
+        }
+        return new int[]{kept, dropped};
+    }
+
+    // 简易 CSV 解析：支持引号包裹和转义的逗号
+    private List<String> splitCsv(String line) {
+        List<String> out = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean inQuote = false;
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            if (ch == '"') {
+                if (inQuote && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    // 转义双引号
+                    cur.append('"'); i++; continue;
+                }
+                inQuote = !inQuote;
+            } else if (ch == ',' && !inQuote) {
+                out.add(cur.toString()); cur.setLength(0);
+            } else {
+                cur.append(ch);
+            }
+        }
+        out.add(cur.toString());
+        return out;
     }
 
     public boolean stopTest(String executionId) {
@@ -322,7 +449,7 @@ public class JMeterService implements InitializingBean {
                 }
                 try {
                     // wait a short grace period before force stop
-                    Thread.sleep(3000);
+                    Thread.sleep(15000);
                 } catch (InterruptedException ignored) {}
                 try {
                     logger.info("执行 docker stop --time=15: {}", cid);
