@@ -1,0 +1,39 @@
+2025-08-19 10:53:53,082 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2025-08-19 10:53:53,117 INFO o.a.j.JMeter: Loading user properties from: /opt/apache-jmeter-5.5/bin/user.properties
+2025-08-19 10:53:53,117 INFO o.a.j.JMeter: Loading system properties from: /opt/apache-jmeter-5.5/bin/system.properties
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting System property: log4j2.formatMsgNoLookups=true
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.output_format=csv
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.print_field_names=true
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.timestamp_format=ms
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: threads=10
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: loops=100
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: rampUp=60
+2025-08-19 10:53:53,118 INFO o.a.j.JMeter: Setting JMeter property: duration=3600
+2025-08-19 10:53:53,138 INFO o.a.j.JMeter: Copyright (c) 1998-2022 The Apache Software Foundation
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: Version 5.5
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: java.version=1.8.0_275
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: os.name=Linux
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: os.arch=amd64
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: os.version=5.15.0-76-generic
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: file.encoding=UTF-8
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: java.awt.headless=true
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: Max memory     =36859543552
+2025-08-19 10:53:53,139 INFO o.a.j.JMeter: Available Processors =8
+2025-08-19 10:53:53,152 INFO o.a.j.JMeter: Default Locale=English (EN)
+2025-08-19 10:53:53,153 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2025-08-19 10:53:53,153 INFO o.a.j.JMeter: JMeterHome=/opt/apache-jmeter-5.5
+2025-08-19 10:53:53,153 INFO o.a.j.JMeter: user.dir  =/data
+2025-08-19 10:53:53,153 INFO o.a.j.JMeter: PWD       =/data
+2025-08-19 10:53:53,154 INFO o.a.j.JMeter: IP: 172.17.0.2 Name: f3d5333d515d FullName: f3d5333d515d
+2025-08-19 10:53:53,204 ERROR o.a.j.JMeter: An error occurred: 
+java.lang.IllegalArgumentException: Cannot write to '/data/reports/20250819_085349_4470b1bb/report' as folder does not exist and parent folder is not writable
+	at org.apache.jorphan.util.JOrphanUtils.canSafelyWriteToFolder(JOrphanUtils.java:672) ~[jorphan.jar:5.5]
+	at org.apache.jorphan.util.JOrphanUtils.canSafelyWriteToFolder(JOrphanUtils.java:620) ~[jorphan.jar:5.5]
+	at org.apache.jmeter.JMeter.extractAndSetReportOutputFolder(JMeter.java:519) ~[ApacheJMeter_core.jar:5.5]
+	at org.apache.jmeter.JMeter.start(JMeter.java:469) ~[ApacheJMeter_core.jar:5.5]
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:1.8.0_275]
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[?:1.8.0_275]
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:1.8.0_275]
+	at java.lang.reflect.Method.invoke(Method.java:498) ~[?:1.8.0_275]
+	at org.apache.jmeter.NewDriver.main(NewDriver.java:259) ~[ApacheJMeter.jar:5.5]

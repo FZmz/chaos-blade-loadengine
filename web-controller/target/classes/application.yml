@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+  application:
+    name: loadtest-controller
+
+# 应用配置
+app:
+  data-dir: ${DATA_DIR:/data}
+  base-public-url: ${BASE_PUBLIC_URL:http://1.94.151.57}
+  jmeter:
+    image: ${JMETER_IMAGE:justb4/jmeter:latest}
+    host-data-dir: ${HOST_DATA_DIR:/tmp/loadtest-data}
+    container-name-prefix: jmeter-test
+    default-heap-size: 1g
+    default-timeout: 3600  # 1小时超时
+
+# 日志配置
+logging:
+  level:
+    com.example.lt: DEBUG
+    com.github.dockerjava: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -1,0 +1,35 @@
+# Maven构建目录
+target/
+!target/loadtest-controller-1.0.0.jar
+
+# IDE文件
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# Git文件
+.git/
+.gitignore
+
+# Docker文件
+Dockerfile
+.dockerignore
+
+# 测试文件
+src/test/
+
+# Maven本地仓库
+.m2/

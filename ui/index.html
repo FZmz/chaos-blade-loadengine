@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>负载测试控制台</title>
+  <style>
+    :root {
+      --bg:#0f1220; --panel:#151a2d; --muted:#8ca0ff; --text:#e6e9ff; --ok:#2ecc71; --warn:#f1c40f; --err:#e74c3c; --accent:#6c8bff;
+      --chip:#2b3357;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background: var(--bg); color: var(--text); }
+    a { color: var(--muted); text-decoration: none; }
+    header { position: sticky; top:0; z-index: 10; background: rgba(21,26,45,.9); backdrop-filter: blur(8px); border-bottom: 1px solid #202749; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 12px 16px; }
+    .row { display:flex; gap:12px; align-items: center; flex-wrap: wrap; }
+    .grow { flex: 1 1 auto; min-width: 220px; }
+    input[type=text], input[type=number], input[type=url], select, textarea {
+      width: 100%; padding:10px 12px; background: #0f1530; color: var(--text); border: 1px solid #2a3565; border-radius: 8px; outline: none;
+    }
+    input[type=file] { color: var(--text); }
+    button {
+      padding:10px 14px; border:1px solid #2a3565; background: #1a2140; color: var(--text); border-radius: 8px; cursor: pointer;
+    }
+    button.primary { background: linear-gradient(135deg, #4f66ff, #7d9bff); border-color: transparent; color:#0f1220; font-weight: 600; }
+    button.ghost { background: transparent; }
+    button.danger { background: #431a24; border-color:#7a2e40; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    nav { display:flex; gap:10px; flex-wrap: wrap; padding: 8px 0; }
+    nav button { background: #111633; }
+    nav button.active { background: var(--accent); color:#0f1220; border-color: transparent; }
+    section { display:none; padding: 16px; }
+    section.active { display: block; }
+    .panel { background: var(--panel); border:1px solid #202749; border-radius: 12px; padding: 16px; }
+    .grid { display:grid; gap:14px; }
+    .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    h2 { margin: 8px 0 12px; font-size: 18px; color: #cfd6ff; }
+    h3 { margin: 0 0 8px; font-size: 16px; color: #cfd6ff; }
+    .muted { color: #a9b7ff; font-size: 13px; }
+    .list { display: grid; gap: 10px; }
+    .item { background: #101632; border:1px solid #22305e; padding: 12px; border-radius: 10px; }
+    .status { display:inline-block; padding:3px 8px; border-radius: 999px; background: var(--chip); border:1px solid #2a3565; font-size: 12px; }
+    .status.RUNNING { background:#123926; border-color:#1e6a42; color:#8ef0b8; }
+    .status.COMPLETED { background:#0e2637; border-color:#1d4e70; color:#86d3ff; }
+    .status.FAILED { background:#3d1b22; border-color:#7a2e40; color:#ffb2c1; }
+    .status.STOPPED { background:#2f2f2f; border-color:#555; color:#ddd; }
+    .status.PENDING { background:#2a2a42; border-color:#515194; color:#c8c8ff; }
+    .status.TIMEOUT { background:#3a2b12; border-color:#7a5a1e; color:#ffe0a6; }
+    .kv { display:flex; gap:8px; }
+    .kv input { flex:1 1 50%; }
+    .kv .rm { width: 38px; }
+    .progress { height: 8px; background:#0e1430; border:1px solid #203166; border-radius: 999px; overflow:hidden; }
+    .bar { height:100%; background: linear-gradient(90deg, #6c8bff, #9ab5ff); width:0%; transition: width .2s ease; }
+    .table { width:100%; border-collapse: collapse; }
+    .table th, .table td { padding: 8px 10px; border-bottom:1px solid #22305e; text-align: left; font-size: 14px; vertical-align: top; }
+    .chips { display:flex; gap:6px; flex-wrap: wrap; }
+    .chip { padding:2px 8px; border-radius: 999px; background:#12193a; border:1px solid #2a3565; font-size: 12px; }
+    .toast { position: fixed; right: 12px; bottom: 12px; background: #111633; border:1px solid #2a3565; border-radius: 10px; padding: 10px 12px; max-width: 360px; display:none; }
+    .toast.show { display:block; }
+    .hint { font-size: 12px; color:#9fb1ff; }
+    .inline { display:inline-flex; gap:8px; align-items: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="row">
+        <strong>负载测试控制台</strong>
+        <div class="grow"></div>
+        <div class="row">
+          <label class="muted">API 基址</label>
+          <input class="api-base-input" type="url" placeholder="例如 http://服务器IP:8008/api" style="min-width:320px;">
+          <button class="save-base">保存</button>
+          <span class="muted hint">默认使用同源 + /api</span>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="panel grow">
+          <div class="row">
+            <div>
+              <div class="muted">健康状态</div>
+              <div class="chips"><span class="chip health-status">-</span></div>
+            </div>
+            <div>
+              <div class="muted">运行中测试</div>
+              <div class="chips"><span class="chip running-count">-</span></div>
+            </div>
+            <div class="grow"></div>
+            <button class="refresh-health">刷新健康</button>
+          </div>
+        </div>
+      </div>
+      <nav>
+        <button data-tab="upload" class="active">1. 文件上传</button>
+        <button data-tab="manage">2. 测试管理</button>
+        <button data-tab="results">3. 结果查看</button>
+        <button data-tab="monitor">4. 系统监控</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- 上传 -->
+    <section id="upload" class="active">
+      <div class="grid cols-2">
+        <div class="panel">
+          <h2>上传测试计划 (.jmx)</h2>
+          <div class="grid">
+            <input type="file" accept=".jmx" id="file-jmx">
+            <div class="progress"><div class="bar" id="bar-jmx"></div></div>
+            <div class="row">
+              <button id="btn-upload-jmx" class="primary">上传</button>
+              <span class="muted" id="jmx-result"></span>
+            </div>
+            <div class="hint">成功后将自动填充“测试管理”的测试计划路径（相对 /data）。</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>上传测试数据 (CSV/TXT)</h2>
+          <div class="grid">
+            <input type="file" accept=".csv,.txt,.json,.xml,.properties" id="file-data">
+            <div class="progress"><div class="bar" id="bar-data"></div></div>
+            <div class="row">
+              <button id="btn-upload-data" class="primary">上传</button>
+              <span class="muted" id="data-result"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h2>已上传文件</h2>
+        <div class="row">
+          <button id="btn-refresh-files">刷新列表</button>
+        </div>
+        <div class="grid cols-3" id="files-lists"></div>
+      </div>
+    </section>
+
+    <!-- 管理 -->
+    <section id="manage">
+      <div class="panel">
+        <h2>启动负载测试</h2>
+        <div class="grid cols-2">
+          <div>
+            <div class="grid">
+              <label>测试名称</label>
+              <input type="text" id="testName" placeholder="例如：API性能测试"/>
+
+              <label>测试计划路径（相对 /data）</label>
+              <div class="row">
+                <input type="text" id="testPlanPath" placeholder="uploads/testplans/xxx.jmx" class="grow"/>
+                <button class="ghost" id="pick-testplan">从文件列表选择</button>
+              </div>
+
+              <label>描述</label>
+              <input type="text" id="description" placeholder="可选"/>
+
+              <div class="grid cols-3">
+                <div>
+                  <label>并发线程数</label>
+                  <input type="number" id="threads" min="1" value="10"/>
+                </div>
+                <div>
+                  <label>循环次数</label>
+                  <input type="number" id="loops" min="1" value="100"/>
+                </div>
+                <div>
+                  <label>Ramp-up (秒)</label>
+                  <input type="number" id="rampUp" min="0" value="60"/>
+                </div>
+              </div>
+
+              <div class="grid cols-3">
+                <div>
+                  <label>超时(秒)</label>
+                  <input type="number" id="timeout" min="10" value="3600"/>
+                </div>
+                <div>
+                  <label>JVM堆大小</label>
+                  <input type="text" id="heapSize" value="1g"/>
+                </div>
+              </div>
+
+              <div>
+                <div class="row">
+                  <h3 style="margin-right:auto">JMeter属性 properties (key=value)</h3>
+                  <button class="ghost" id="add-prop">添加属性</button>
+                </div>
+                <div id="props" class="grid"></div>
+              </div>
+
+              <div>
+                <div class="row">
+                  <h3 style="margin-right:auto">JVM参数 jvmArgs (key=value)</h3>
+                  <button class="ghost" id="add-jvm">添加参数</button>
+                </div>
+                <div id="jvms" class="grid"></div>
+              </div>
+
+              <div class="row">
+                <button id="btn-start" class="primary">启动测试</button>
+                <span id="start-msg" class="muted"></span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3>运行中测试</h3>
+            <div class="list" id="running-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结果 -->
+    <section id="results">
+      <div class="panel">
+        <div class="row">
+          <h2 style="margin-right:auto">执行历史与结果</h2>
+          <button id="btn-refresh-tests">刷新</button>
+        </div>
+        <div style="overflow:auto">
+          <table class="table" id="tests-table">
+            <thead>
+              <tr>
+                <th>执行ID</th>
+                <th>名称</th>
+                <th>状态</th>
+                <th>开始/结束</th>
+                <th>计划</th>
+                <th>操作</th>
+                <th>链接</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 监控 -->
+    <section id="monitor">
+      <div class="grid cols-2">
+        <div class="panel">
+          <h2>系统健康</h2>
+          <pre id="health-json" style="white-space:pre-wrap;background:#0f1530;border:1px solid #22305e;border-radius:8px;padding:10px;overflow:auto;max-height:320px;"></pre>
+        </div>
+        <div class="panel">
+          <h2>快速操作</h2>
+          <div class="grid">
+            <button id="btn-ping-api">Ping /api/loadtest/health</button>
+            <span class="muted" id="ping-result"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== 基础配置 =====
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const byId = id => document.getElementById(id);
+    const toast = (msg, type='info') => {
+      const el = byId('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      el.style.borderColor = type==='error' ? '#7a2e40' : '#2a3565';
+      setTimeout(()=>el.classList.remove('show'), 2400);
+    };
+
+    const defaultApiBase = `${window.location.origin}/api`;
+    const loadApiBase = () => localStorage.getItem('API_BASE') || defaultApiBase;
+    const saveApiBase = (v) => localStorage.setItem('API_BASE', v);
+    const apiBaseInput = $('.api-base-input');
+    apiBaseInput.value = loadApiBase();
+    $('.save-base').onclick = () => {
+      const v = apiBaseInput.value.trim() || defaultApiBase;
+      saveApiBase(v);
+      toast('已保存 API 基址：' + v);
+    };
+
+    async function apiFetch(path, opts={}) {
+      const base = loadApiBase();
+      const url = path.startsWith('http') ? path : `${base}${path}`;
+      const res = await fetch(url, {
+        headers: { 'Accept':'application/json', ...(opts.headers||{}) },
+        ...opts
+      });
+      const ct = res.headers.get('content-type') || '';
+      let data = null;
+      try { data = ct.includes('application/json') ? await res.json() : await res.text(); } catch(e) {}
+      if (!res.ok) {
+        const msg = (data && data.error) || (data && data.message) || res.statusText || '请求失败';
+        throw new Error(`${res.status} ${msg}`);
+      }
+      return data;
+    }
+
+    function uploadWithProgress(endpoint, file, barEl, onDone) {
+      const base = loadApiBase();
+      const url = `${base}${endpoint}`;
+      const xhr = new XMLHttpRequest();
+      const form = new FormData();
+      form.append('file', file);
+
+      xhr.open('POST', url);
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded/e.total)*100);
+          barEl.style.width = pct + '%';
+        }
+      });
+      xhr.onload = () => {
+        try {
+          const obj = JSON.parse(xhr.responseText);
+          if (!/^2/.test(String(xhr.status))) throw new Error(obj.error || '上传失败');
+          onDone(null, obj);
+        } catch (err) {
+          onDone(err);
+        } finally {
+          setTimeout(()=> barEl.style.width = '0%', 800);
+        }
+      };
+      xhr.onerror = () => onDone(new Error('网络错误'));
+      xhr.send(form);
+    }
+
+    // ===== 导航切换 =====
+    $$('nav button').forEach(btn=>{
+      btn.onclick = ()=>{
+        $$('nav button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        $$('main section').forEach(s=>s.classList.remove('active'));
+        byId(tab).classList.add('active');
+      };
+    });
+
+    // ===== 健康与运行数 =====
+    async function refreshHealth() {
+      try {
+        const r = await apiFetch('/loadtest/health');
+        const data = r.data || r;
+        $('.health-status').textContent = data.status || 'UNKNOWN';
+        $('.running-count').textContent = String(data.runningTests ?? '-');
+        byId('health-json').textContent = JSON.stringify(data, null, 2);
+      } catch(e) {
+        $('.health-status').textContent = 'ERROR';
+        toast('健康检查失败：' + e.message, 'error');
+      }
+    }
+    $('.refresh-health').onclick = refreshHealth;
+    refreshHealth();
+
+    // ===== 文件列表 =====
+    function truncatePath(p){ return (p||'').replace(/^.*\/data\//,''); }
+    function fileItemHTML(category, p) {
+      const rel = truncatePath(p);
+      return `
+        <div class="item">
+          <div class="muted">分类：${category}</div>
+          <div style="word-break: break-all; margin:6px 0;">${p}</div>
+          <div class="row">
+            ${category==='testplans' ? `<button class="ghost use-plan" data-path="${rel}">用作测试计划</button>` : ''}
+            <button class="danger ghost del-file" data-path="${p}">删除</button>
+          </div>
+        </div>`;
+    }
+
+    async function renderFiles() {
+      const wrap = byId('files-lists');
+      wrap.innerHTML = '<div class="muted">加载中...</div>';
+      try {
+        const r = await apiFetch('/files/list');
+        const data = r.data || {};
+        const cats = ['testplans','data','misc'];
+        wrap.innerHTML = cats.map(cat => {
+          const arr = (data[cat] || []);
+          const list = arr.map(p => fileItemHTML(cat, typeof p === 'string' ? p : String(p))).join('');
+          return `<div><h3>${cat}</h3><div class="list">${list || '<div class="muted">暂无</div>'}</div></div>`;
+        }).join('');
+        // 绑定事件
+        $$('.use-plan').forEach(b=> b.onclick = ()=>{
+          byId('testPlanPath').value = b.dataset.path;
+          toast('已填充测试计划路径：' + b.dataset.path);
+        });
+        $$('.del-file').forEach(b=> b.onclick = async ()=>{
+          if (!confirm('确定删除该文件？\n' + b.dataset.path)) return;
+          try {
+            await apiFetch('/files/delete?filePath=' + encodeURIComponent(b.dataset.path), { method:'DELETE' });
+            toast('删除成功');
+            renderFiles();
+          } catch(e) { toast('删除失败：' + e.message, 'error'); }
+        });
+      } catch(e) {
+        wrap.innerHTML = `<div class="muted">加载失败：${e.message}</div>`;
+      }
+    }
+    byId('btn-refresh-files').onclick = renderFiles;
+    renderFiles();
+
+    // ===== 上传处理 =====
+    byId('btn-upload-jmx').onclick = ()=>{
+      const f = byId('file-jmx').files[0];
+      if (!f) return toast('请选择 .jmx 文件', 'error');
+      uploadWithProgress('/files/upload/testplan', f, byId('bar-jmx'), (err, r)=>{
+        if (err) return toast(err.message, 'error');
+        const data = r.data || r;
+        byId('jmx-result').textContent = '已上传：' + (data.accessUrl || data.uploadPath || data.fileName);
+        const rel = truncatePath(data.uploadPath || '');
+        if (rel) { byId('testPlanPath').value = rel; }
+        toast('测试计划上传成功');
+        renderFiles();
+      });
+    };
+    byId('btn-upload-data').onclick = ()=>{
+      const f = byId('file-data').files[0];
+      if (!f) return toast('请选择数据文件', 'error');
+      uploadWithProgress('/files/upload/data', f, byId('bar-data'), (err, r)=>{
+        if (err) return toast(err.message, 'error');
+        const data = r.data || r;
+        byId('data-result').textContent = '已上传：' + (data.accessUrl || data.uploadPath || data.fileName);
+        toast('数据文件上传成功');
+        renderFiles();
+      });
+    };
+    byId('pick-testplan').onclick = renderFiles;
+
+    // ===== KV 行编辑器 =====
+    function addKV(containerId, k='', v='') {
+      const wrap = byId(containerId);
+      const row = document.createElement('div');
+      row.className = 'kv';
+      row.innerHTML = `
+        <input type="text" placeholder="key" value="${k}">
+        <input type="text" placeholder="value" value="${v}">
+        <button class="rm danger">X</button>
+      `;
+      row.querySelector('.rm').onclick = ()=> row.remove();
+      wrap.appendChild(row);
+    }
+    byId('add-prop').onclick = ()=> addKV('props','','');
+    byId('add-jvm').onclick = ()=> addKV('jvms','','');
+    // 预置几条常用属性示例（可删）
+    // addKV('props','host','httpbin.org');
+    // addKV('props','port','443');
+    // addKV('props','protocol','https');
+
+    function collectKV(containerId) {
+      const obj = {};
+      $$('#' + containerId + ' .kv').forEach(row=>{
+        const [k,v] = row.querySelectorAll('input');
+        const key = (k.value||'').trim();
+        if (key) obj[key] = (v.value||'').trim();
+      });
+      return Object.keys(obj).length ? obj : undefined;
+    }
+
+    // ===== 启动/停止测试 & 状态 =====
+    let pollingTimer = null;
+
+    function renderRunning(list) {
+      const wrap = byId('running-list');
+      if (!list || !list.length) { wrap.innerHTML = '<div class="muted">暂无运行中的测试</div>'; return; }
+      wrap.innerHTML = list.map(x=>`
+        <div class="item">
+          <div class="row">
+            <div><strong>${x.testName || '-'}</strong></div>
+            <span class="status ${x.status}">${x.status}</span>
+            <div class="grow"></div>
+            ${x.status==='RUNNING' ? `<button class="danger stop" data-id="${x.executionId}">停止</button>` : ''}
+          </div>
+          <div class="muted">ID: ${x.executionId}</div>
+          <div class="muted">计划: ${x.testPlanPath||'-'}</div>
+          <div class="muted">开始: ${x.startTime||'-'}</div>
+        </div>
+      `).join('');
+      $$('.stop').forEach(b=> b.onclick = async ()=>{
+        if (!confirm('停止测试 ' + b.dataset.id + ' ?')) return;
+        try {
+          await apiFetch('/loadtest/stop/' + encodeURIComponent(b.dataset.id), { method:'POST' });
+          toast('已发送停止指令');
+          refreshTests();
+        } catch(e){ toast('停止失败：' + e.message, 'error'); }
+      });
+    }
+
+    async function refreshTests() {
+      try {
+        const r = await apiFetch('/loadtest/list');
+        const arr = (r.data || r || []);
+        // 运行中
+        renderRunning(arr.filter(x=>x.status==='RUNNING'));
+        // 历史表
+        renderTestsTable(arr);
+      } catch(e){ /* 忽略，保留上一次数据 */ }
+    }
+    byId('btn-refresh-tests').onclick = refreshTests;
+
+    function ensurePolling() {
+      if (pollingTimer) return;
+      pollingTimer = setInterval(()=>{
+        refreshHealth();
+        refreshTests();
+      }, 4000);
+    }
+    ensurePolling();
+
+    byId('btn-start').onclick = async ()=>{
+      const testPlanPath = byId('testPlanPath').value.trim();
+      if (!testPlanPath) return toast('请填写测试计划路径（相对 /data）', 'error');
+      const payload = {
+        testPlanPath,
+        testName: byId('testName').value.trim() || undefined,
+        description: byId('description').value.trim() || undefined,
+        threads: Number(byId('threads').value || 1),
+        loops: Number(byId('loops').value || 1),
+        rampUp: Number(byId('rampUp').value || 0),
+        timeout: Number(byId('timeout').value || 3600),
+        heapSize: byId('heapSize').value.trim() || '1g',
+        properties: collectKV('props'),
+        jvmArgs: collectKV('jvms')
+      };
+      try {
+        byId('btn-start').disabled = true;
+        const r = await apiFetch('/loadtest/start', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const ex = r.data || r;
+        byId('start-msg').textContent = '已启动，执行ID：' + ex.executionId;
+        toast('负载测试启动成功');
+        refreshTests();
+        ensurePolling();
+      } catch(e){
+        toast('启动失败：' + e.message, 'error');
+      } finally {
+        byId('btn-start').disabled = false;
+      }
+    };
+
+    // ===== 结果表格 =====
+    function linkCell(x) {
+      // 直接显示 report/results 目录链接（若后端已生成）
+      const links = [];
+      if (x.reportPath) {
+        const dir = String(x.reportPath).replace(/^results\//,'');
+        links.push(`<a href="/${dir}/index.html" target="_blank">报告</a>`);
+      }
+      if (x.resultPath) {
+        const file = String(x.resultPath).replace(/^results\//,'');
+        links.push(`<a href="/results/${file}" target="_blank">原始JTL</a>`);
+      }
+      if (x.logPath) {
+        const log = String(x.logPath).replace(/^results\//,'');
+        links.push(`<a href="/results/${log}" target="_blank">日志</a>`);
+      }
+      return links.join(' | ') || '-';
+    }
+
+    function renderTestsTable(arr) {
+      const tb = byId('tests-table').querySelector('tbody');
+      if (!arr || !arr.length) {
+        tb.innerHTML = `<tr><td colspan="7"><span class="muted">暂无执行记录</span></td></tr>`;
+        return;
+      }
+      tb.innerHTML = arr.map(x=>`
+        <tr>
+          <td><code>${x.executionId}</code></td>
+          <td>${x.testName||'-'}</td>
+          <td><span class="status ${x.status}">${x.status}</span></td>
+          <td>
+            <div>${x.startTime || '-'}</div>
+            <div class="muted">${x.endTime || ''}</div>
+          </td>
+          <td style="word-break:break-all">${x.testPlanPath||'-'}</td>
+          <td class="inline">
+            ${x.status==='RUNNING' ? `<button class="danger small stop2" data-id="${x.executionId}">停止</button>` : ''}
+            <button class="ghost small fetch-res" data-id="${x.executionId}">获取结果</button>
+          </td>
+          <td>${linkCell(x)}</td>
+        </tr>
+      `).join('');
+      $$('.stop2').forEach(b=> b.onclick = async ()=>{
+        if (!confirm('停止测试 ' + b.dataset.id + ' ?')) return;
+        try { await apiFetch('/loadtest/stop/' + b.dataset.id, { method:'POST' }); toast('停止中'); refreshTests(); } catch(e){ toast('失败：' + e.message, 'error'); }
+      });
+      $$('.fetch-res').forEach(b=> b.onclick = async ()=>{
+        try {
+          const r = await apiFetch('/loadtest/results/' + b.dataset.id);
+          const d = r.data || r;
+          const parts = [];
+          if (d.reportUrl) parts.push(`<a href="${d.reportUrl}" target="_blank">报告</a>`);
+          if (d.resultUrl) parts.push(`<a href="${d.resultUrl}" target="_blank">原始JTL</a>`);
+          toast(parts.join(' | ') || '暂无结果');
+          refreshTests();
+        } catch(e){ toast('获取结果失败：' + e.message, 'error'); }
+      });
+    }
+
+    // 首次加载
+    refreshTests();
+
+    // ===== 监控工具 =====
+    byId('btn-ping-api').onclick = async ()=>{
+      try {
+        const r = await apiFetch('/loadtest/health');
+        byId('ping-result').textContent = 'OK: ' + (r.message || '健康');
+        toast('健康检查成功');
+      } catch(e){ byId('ping-result').textContent = e.message; toast('健康检查失败：' + e.message, 'error'); }
+    };
+  </script>
+</body>
+</html>

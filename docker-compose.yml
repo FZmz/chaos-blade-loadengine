@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  nginx:
+    image: nginx:1.25
+    container_name: lt-nginx
+    ports:
+      - "8008:80"
+    volumes:
+      - ${HOST_DATA_DIR}:/data
+      - ./ui:/data/ui:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+
+  web:
+    build: ./web-controller
+    container_name: lt-web
+    environment:
+      - DATA_DIR=/data
+      - BASE_PUBLIC_URL=http://1.94.151.57        # 向外返回的访问前缀，发布到服务器后改成你域名
+      - JMETER_IMAGE=justb4/jmeter:latest
+      - HOST_DATA_DIR=${HOST_DATA_DIR}          # 让 web 使用宿主绝对路径给 docker run 挂载
+    volumes:
+      - ${HOST_DATA_DIR}:/data
+      - /var/run/docker.sock:/var/run/docker.sock  # 允许 web 通过 docker cli 启/停 JMeter 容器
+    expose:
+      - "8080"
