@@ -39,6 +39,9 @@ public class JMeterService implements InitializingBean {
     @Autowired
     private AppConfig appConfig;
 
+    @Autowired
+    private com.example.lt.store.ExecutionStore store;
+
     private DockerClient dockerClient;
     private final Map<String, TestExecution> runningTests = new ConcurrentHashMap<>();
     // 防止并发重复生成报告：每个 executionId 一把锁
@@ -105,6 +108,10 @@ public class JMeterService implements InitializingBean {
             // 异步监控容器状态
             monitorContainerAsync(execution);
 
+            // 持久化记录与事件
+            store.saveOrUpdate(execution);
+            store.appendEvent(executionId, new com.example.lt.model.ExecutionEvent("STARTED", "container:" + containerId));
+
             logger.info("JMeter测试启动成功: {}", executionId);
             return execution;
 
@@ -112,6 +119,7 @@ public class JMeterService implements InitializingBean {
             execution.setStatus(TestExecution.TestStatus.FAILED);
             execution.setErrorMessage(e.getMessage());
             execution.setEndTime(LocalDateTime.now());
+            try { store.saveOrUpdate(execution); store.appendEvent(executionId, new com.example.lt.model.ExecutionEvent("FAILED", e.getMessage())); } catch (Exception ignore) {}
             logger.error("启动JMeter测试失败: {}", executionId, e);
             throw new RuntimeException("启动测试失败: " + e.getMessage(), e);
         }
@@ -302,8 +310,9 @@ public class JMeterService implements InitializingBean {
 
     private void monitorContainerAsync(TestExecution execution) {
         CompletableFuture.runAsync(() -> {
+            Integer exitCode = null;
             try {
-                Integer exitCode = dockerClient.waitContainerCmd(execution.getContainerId()).start()
+                exitCode = dockerClient.waitContainerCmd(execution.getContainerId()).start()
                     .awaitStatusCode();
                 execution.setEndTime(LocalDateTime.now());
                 if (exitCode == 0) {
@@ -320,8 +329,18 @@ public class JMeterService implements InitializingBean {
                 execution.setEndTime(LocalDateTime.now());
                 logger.error("监控JMeter容器失败: {}", execution.getExecutionId(), e);
             } finally {
-                // 无论成功/失败/停止，尽力生成报告（若 -e -o 未生成则回退用 -g -o -f）
-                generateReportIfMissing(execution);
+                try {
+                    // 生成报告及汇总
+                    generateReportIfMissing(execution);
+                    // 汇总
+                    java.io.File jtl = new java.io.File(appConfig.getDataDir(), execution.getResultPath());
+                    com.example.lt.model.ExecutionSummary sum = com.example.lt.service.SummaryCalculator.compute(jtl);
+                    store.saveSummary(execution.getExecutionId(), sum);
+                    // 持久化与事件
+                    store.saveOrUpdate(execution);
+                    String t = (exitCode != null && exitCode == 0) ? "COMPLETED" : "FAILED";
+                    store.appendEvent(execution.getExecutionId(), new com.example.lt.model.ExecutionEvent(t, "rc=" + exitCode));
+                } catch (Exception ignore) {}
             }
         });
     }
@@ -546,6 +565,15 @@ public class JMeterService implements InitializingBean {
 
             // 主动触发报告生成检查（而不仅依赖 finally 块）
             generateReportIfMissing(execution);
+
+            // 汇总并持久化+事件
+            try {
+                java.io.File jtl = new java.io.File(appConfig.getDataDir(), execution.getResultPath());
+                com.example.lt.model.ExecutionSummary sum = com.example.lt.service.SummaryCalculator.compute(jtl);
+                store.saveSummary(executionId, sum);
+                store.saveOrUpdate(execution);
+                store.appendEvent(executionId, new com.example.lt.model.ExecutionEvent("STOPPED", "by-user"));
+            } catch (Exception ignore) {}
 
             return true;
         } catch (Exception e) {

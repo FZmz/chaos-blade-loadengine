@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
     private String dataDir = "/data";
     private String basePublicUrl = "http://1.94.151.57";
+    private String executionsDir = "/data/executions";
     private JMeterConfig jmeter = new JMeterConfig();
 
     public static class JMeterConfig {
@@ -20,16 +21,16 @@ public class AppConfig {
         // Getters and Setters
         public String getImage() { return image; }
         public void setImage(String image) { this.image = image; }
-        
+
         public String getHostDataDir() { return hostDataDir; }
         public void setHostDataDir(String hostDataDir) { this.hostDataDir = hostDataDir; }
-        
+
         public String getContainerNamePrefix() { return containerNamePrefix; }
         public void setContainerNamePrefix(String containerNamePrefix) { this.containerNamePrefix = containerNamePrefix; }
-        
+
         public String getDefaultHeapSize() { return defaultHeapSize; }
         public void setDefaultHeapSize(String defaultHeapSize) { this.defaultHeapSize = defaultHeapSize; }
-        
+
         public int getDefaultTimeout() { return defaultTimeout; }
         public void setDefaultTimeout(int defaultTimeout) { this.defaultTimeout = defaultTimeout; }
     }
@@ -37,10 +38,13 @@ public class AppConfig {
     // Getters and Setters
     public String getDataDir() { return dataDir; }
     public void setDataDir(String dataDir) { this.dataDir = dataDir; }
-    
+
     public String getBasePublicUrl() { return basePublicUrl; }
     public void setBasePublicUrl(String basePublicUrl) { this.basePublicUrl = basePublicUrl; }
-    
+
+    public String getExecutionsDir() { return executionsDir; }
+    public void setExecutionsDir(String executionsDir) { this.executionsDir = executionsDir; }
+
     public JMeterConfig getJmeter() { return jmeter; }
     public void setJmeter(JMeterConfig jmeter) { this.jmeter = jmeter; }
 }

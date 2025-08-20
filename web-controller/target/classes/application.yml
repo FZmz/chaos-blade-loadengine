@@ -13,6 +13,7 @@ spring:
 app:
   data-dir: ${DATA_DIR:/data}
   base-public-url: ${BASE_PUBLIC_URL:http://1.94.151.57}
+  executions-dir: ${EXECUTIONS_DIR:/data/executions}
   jmeter:
     image: ${JMETER_IMAGE:justb4/jmeter:latest}
     host-data-dir: ${HOST_DATA_DIR:/tmp/loadtest-data}

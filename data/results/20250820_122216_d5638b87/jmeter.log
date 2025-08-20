@@ -1,0 +1,138 @@
+2025-08-20 14:22:22,489 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2025-08-20 14:22:22,573 INFO o.a.j.JMeter: Loading user properties from: /opt/apache-jmeter-5.5/bin/user.properties
+2025-08-20 14:22:22,577 INFO o.a.j.JMeter: Loading system properties from: /opt/apache-jmeter-5.5/bin/system.properties
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting System property: log4j2.formatMsgNoLookups=true
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.output_format=csv
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.print_field_names=true
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.timestamp_format=ms
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.default_delimiter=,
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.latency=true
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.label=true
+2025-08-20 14:22:22,579 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.successful=true
+2025-08-20 14:22:22,580 INFO o.a.j.JMeter: Setting JMeter property: jmeter.save.saveservice.thread_counts=true
+2025-08-20 14:22:22,580 INFO o.a.j.JMeter: Setting JMeter property: threads=10
+2025-08-20 14:22:22,580 INFO o.a.j.JMeter: Setting JMeter property: loops=100
+2025-08-20 14:22:22,580 INFO o.a.j.JMeter: Setting JMeter property: rampUp=60
+2025-08-20 14:22:22,580 INFO o.a.j.JMeter: Setting JMeter property: duration=3600
+2025-08-20 14:22:22,606 INFO o.a.j.JMeter: Copyright (c) 1998-2022 The Apache Software Foundation
+2025-08-20 14:22:22,606 INFO o.a.j.JMeter: Version 5.5
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: java.version=1.8.0_275
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: os.name=Linux
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: os.arch=amd64
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: os.version=5.15.0-76-generic
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: file.encoding=UTF-8
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: java.awt.headless=true
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: Max memory     =37966839808
+2025-08-20 14:22:22,607 INFO o.a.j.JMeter: Available Processors =8
+2025-08-20 14:22:22,633 INFO o.a.j.JMeter: Default Locale=English (EN)
+2025-08-20 14:22:22,634 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2025-08-20 14:22:22,634 INFO o.a.j.JMeter: JMeterHome=/opt/apache-jmeter-5.5
+2025-08-20 14:22:22,634 INFO o.a.j.JMeter: user.dir  =/data
+2025-08-20 14:22:22,634 INFO o.a.j.JMeter: PWD       =/data
+2025-08-20 14:22:22,635 INFO o.a.j.JMeter: IP: 172.17.0.2 Name: 5a1cef744601 FullName: 5a1cef744601
+2025-08-20 14:22:22,698 INFO o.a.j.JMeter: Setting property 'jmeter.reportgenerator.outputdir' to:'/data/reports/20250820_122216_d5638b87'
+2025-08-20 14:22:22,709 INFO o.a.j.s.FileServer: Default base='/data'
+2025-08-20 14:22:22,711 INFO o.a.j.s.FileServer: Set new base='/data/uploads/testplans'
+2025-08-20 14:22:23,185 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
+2025-08-20 14:22:23,269 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
+2025-08-20 14:22:23,295 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
+2025-08-20 14:22:23,308 INFO o.a.j.s.SaveService: Loading file: /data/uploads/testplans/tt_1_20250819_071630_8b8203ae.jmx
+2025-08-20 14:22:23,430 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-08-20 14:22:23,430 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-08-20 14:22:23,431 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-08-20 14:22:23,431 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-08-20 14:22:23,431 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
+2025-08-20 14:22:23,432 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
+2025-08-20 14:22:24,971 INFO o.a.j.JMeter: Creating summariser <summary>
+2025-08-20 14:22:24,990 INFO o.a.j.r.d.ReportGenerator: ReportGenerator will use for Parsing the separator: ','
+2025-08-20 14:22:24,991 INFO o.a.j.r.d.ReportGenerator: Will generate report at end of test from  results file: /data/results/20250820_122216_d5638b87/results.jtl
+2025-08-20 14:22:24,991 INFO o.a.j.r.d.ReportGenerator: Reading report generator properties from: /opt/apache-jmeter-5.5/bin/reportgenerator.properties
+2025-08-20 14:22:24,992 INFO o.a.j.r.d.ReportGenerator: Merging with JMeter properties
+2025-08-20 14:22:25,027 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.temp_dir' not found, using default value 'temp' instead.
+2025-08-20 14:22:25,033 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.apdex_per_transaction' not found, using default value 'null' instead.
+2025-08-20 14:22:25,033 INFO o.a.j.r.c.ReportGeneratorConfiguration: apdex_per_transaction is empty, not APDEX per transaction customization
+2025-08-20 14:22:25,034 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.sample_filter' not found, using default value 'null' instead.
+2025-08-20 14:22:25,035 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.report_title' not found, using default value 'null' instead.
+2025-08-20 14:22:25,036 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.start_date' not found, using default value 'null' instead.
+2025-08-20 14:22:25,036 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.end_date' not found, using default value 'null' instead.
+2025-08-20 14:22:25,036 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.date_format' not found, using default value 'null' instead.
+2025-08-20 14:22:25,038 INFO o.a.j.r.c.ReportGeneratorConfiguration: Will use date range start date: null, end date: null
+2025-08-20 14:22:25,045 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.totalTPS.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,046 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.activeThreadsOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,046 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.timeVsThreads.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,046 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimeDistribution.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,047 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.transactionsPerSecond.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,047 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimePercentiles.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,047 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimePercentilesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,048 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,048 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.connectTimeOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,048 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.latenciesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2025-08-20 14:22:25,050 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.filters_only_sample_series' not found, using default value 'true' instead.
+2025-08-20 14:22:25,050 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.series_filter' not found, using default value '' instead.
+2025-08-20 14:22:25,050 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.show_controllers_only' not found, using default value 'false' instead.
+2025-08-20 14:22:25,051 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.filters_only_sample_series' not found, using default value 'true' instead.
+2025-08-20 14:22:25,051 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.series_filter' not found, using default value '' instead.
+2025-08-20 14:22:25,051 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.show_controllers_only' not found, using default value 'false' instead.
+2025-08-20 14:22:25,079 INFO o.a.j.e.StandardJMeterEngine: Running the test!
+2025-08-20 14:22:25,080 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2025-08-20 14:22:25,080 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2025-08-20 14:22:25,115 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
+2025-08-20 14:22:25,115 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
+2025-08-20 14:22:26,289 INFO o.a.j.JMeter: Running test (1755692546289)
+2025-08-20 14:22:26,601 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : Thread Group
+2025-08-20 14:22:26,601 INFO o.a.j.e.StandardJMeterEngine: Starting 5 threads for group Thread Group.
+2025-08-20 14:22:26,601 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2025-08-20 14:22:26,601 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=5 ramp-up=10 delayedStart=false
+2025-08-20 14:22:26,674 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2025-08-20 14:22:26,687 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
+2025-08-20 14:22:26,703 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-1
+2025-08-20 14:22:26,869 INFO o.a.j.p.h.s.HTTPHCAbstractImpl: Local host = 5a1cef744601
+2025-08-20 14:22:26,892 INFO o.a.j.p.h.s.HTTPHC4Impl: HTTP request retry count = 0
+2025-08-20 14:22:26,898 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
+2025-08-20 14:22:26,899 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to ISO-8859-1
+2025-08-20 14:22:26,899 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
+2025-08-20 14:22:26,899 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
+2025-08-20 14:22:28,696 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-2
+2025-08-20 14:22:30,691 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-3
+2025-08-20 14:22:30,892 INFO o.a.j.r.Summariser: summary +      5 in 00:00:05 =    1.1/s Avg:   711 Min:   136 Max:  1583 Err:     0 (0.00%) Active: 3 Started: 3 Finished: 0
+2025-08-20 14:22:32,669 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-4
+2025-08-20 14:22:34,659 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-5
+2025-08-20 14:23:00,033 INFO o.a.j.r.Summariser: summary +    155 in 00:00:29 =    5.3/s Avg:   852 Min:     7 Max:  5803 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:23:00,033 INFO o.a.j.r.Summariser: summary =    160 in 00:00:34 =    4.7/s Avg:   848 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:23:30,060 INFO o.a.j.r.Summariser: summary +    259 in 00:00:30 =    8.6/s Avg:   505 Min:     7 Max:  2395 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:23:30,061 INFO o.a.j.r.Summariser: summary =    419 in 00:01:04 =    6.6/s Avg:   636 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:24:00,094 INFO o.a.j.r.Summariser: summary +    291 in 00:00:30 =    9.7/s Avg:   464 Min:     7 Max:  2203 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:24:00,094 INFO o.a.j.r.Summariser: summary =    710 in 00:01:34 =    7.6/s Avg:   565 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:24:30,130 INFO o.a.j.r.Summariser: summary +    336 in 00:00:30 =   11.2/s Avg:   379 Min:     7 Max:  1576 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:24:30,131 INFO o.a.j.r.Summariser: summary =   1046 in 00:02:04 =    8.4/s Avg:   506 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:25:00,035 INFO o.a.j.r.Summariser: summary +    316 in 00:00:30 =   10.6/s Avg:   418 Min:     7 Max:  1629 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:25:00,035 INFO o.a.j.r.Summariser: summary =   1362 in 00:02:34 =    8.9/s Avg:   485 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:25:30,154 INFO o.a.j.r.Summariser: summary +    317 in 00:00:30 =   10.5/s Avg:   406 Min:     8 Max:  1629 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:25:30,155 INFO o.a.j.r.Summariser: summary =   1679 in 00:03:04 =    9.1/s Avg:   470 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:26:00,143 INFO o.a.j.r.Summariser: summary +    341 in 00:00:30 =   11.4/s Avg:   383 Min:     7 Max:  1627 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:26:00,144 INFO o.a.j.r.Summariser: summary =   2020 in 00:03:34 =    9.4/s Avg:   455 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:26:30,045 INFO o.a.j.r.Summariser: summary +    331 in 00:00:30 =   11.1/s Avg:   393 Min:     7 Max:  1641 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:26:30,045 INFO o.a.j.r.Summariser: summary =   2351 in 00:04:04 =    9.6/s Avg:   447 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:27:00,038 INFO o.a.j.r.Summariser: summary +    321 in 00:00:30 =   10.7/s Avg:   405 Min:     7 Max:  1687 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:27:00,038 INFO o.a.j.r.Summariser: summary =   2672 in 00:04:34 =    9.8/s Avg:   442 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:27:30,108 INFO o.a.j.r.Summariser: summary +    337 in 00:00:30 =   11.2/s Avg:   388 Min:     7 Max:  1919 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:27:30,109 INFO o.a.j.r.Summariser: summary =   3009 in 00:05:04 =    9.9/s Avg:   436 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:28:00,338 INFO o.a.j.r.Summariser: summary +    337 in 00:00:30 =   11.1/s Avg:   382 Min:     7 Max:  1723 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:28:00,338 INFO o.a.j.r.Summariser: summary =   3346 in 00:05:34 =   10.0/s Avg:   430 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:28:30,106 INFO o.a.j.r.Summariser: summary +    298 in 00:00:30 =   10.0/s Avg:   441 Min:     7 Max:  1736 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:28:30,106 INFO o.a.j.r.Summariser: summary =   3644 in 00:06:04 =   10.0/s Avg:   431 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:29:00,175 INFO o.a.j.r.Summariser: summary +    342 in 00:00:30 =   11.4/s Avg:   373 Min:     7 Max:  1522 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:29:00,176 INFO o.a.j.r.Summariser: summary =   3986 in 00:06:34 =   10.1/s Avg:   426 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:29:30,014 INFO o.a.j.r.Summariser: summary +    307 in 00:00:30 =   10.3/s Avg:   432 Min:     7 Max:  1861 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:29:30,015 INFO o.a.j.r.Summariser: summary =   4293 in 00:07:04 =   10.1/s Avg:   427 Min:     7 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:30:00,078 INFO o.a.j.r.Summariser: summary +    332 in 00:00:30 =   11.0/s Avg:   391 Min:     6 Max:  1429 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:30:00,078 INFO o.a.j.r.Summariser: summary =   4625 in 00:07:34 =   10.2/s Avg:   424 Min:     6 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:30:30,064 INFO o.a.j.r.Summariser: summary +    335 in 00:00:30 =   11.2/s Avg:   385 Min:     6 Max:  1785 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:30:30,069 INFO o.a.j.r.Summariser: summary =   4960 in 00:08:04 =   10.3/s Avg:   421 Min:     6 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:31:00,098 INFO o.a.j.r.Summariser: summary +    293 in 00:00:30 =    9.8/s Avg:   447 Min:     6 Max:  1776 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:31:00,098 INFO o.a.j.r.Summariser: summary =   5253 in 00:08:34 =   10.2/s Avg:   423 Min:     6 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:31:30,351 INFO o.a.j.r.Summariser: summary +    344 in 00:00:30 =   11.4/s Avg:   381 Min:     6 Max:  1625 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:31:30,352 INFO o.a.j.r.Summariser: summary =   5597 in 00:09:04 =   10.3/s Avg:   420 Min:     6 Max:  5803 Err:     0 (0.00%)
+2025-08-20 14:32:00,134 INFO o.a.j.r.Summariser: summary +    341 in 00:00:30 =   11.5/s Avg:   375 Min:     7 Max:  1850 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2025-08-20 14:32:00,134 INFO o.a.j.r.Summariser: summary =   5938 in 00:09:34 =   10.3/s Avg:   418 Min:     6 Max:  5803 Err:     0 (0.00%)

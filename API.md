@@ -59,6 +59,8 @@
   - GET /api/loadtest/list
   - GET /api/loadtest/results/{executionId}
   - GET /api/loadtest/health
+  - GET /api/loadtest/events/{executionId}?tail=100
+  - GET /api/loadtest/summary/{executionId}
 - 实时指标
   - GET /api/metrics/{executionId}
   - GET /api/metrics/stream/{executionId}（SSE）
@@ -271,11 +273,41 @@
 
 ### 获取所有测试列表
 - 接口名称: 测试列表
-- 接口说明: 返回当前服务已知的所有测试执行信息（内存态）
+- 接口说明: 返回当前服务已知的所有测试执行信息（持久化+运行中）
 - 接口URL: /api/loadtest/list
 - 接口方法: GET
 - 成功响应
   - 200 OK，data: TestExecution[]
+
+### 获取事件流水（只读）
+- 接口名称: 获取事件流水
+- 接口说明: 返回最近 N 条事件（JSON Lines 原样字符串），用于审计与追踪
+- 接口URL: /api/loadtest/events/{executionId}
+- 接口方法: GET
+- 查询参数: tail (Integer, 可选, 默认 100) —— 返回最近 N 条
+- 成功响应
+  - 200 OK，data: String[]（每行一个 JSON 字符串）
+- 错误响应
+  - 500: 读取失败
+- 示例
+  ```bash
+  curl "http://<host>:8008/api/loadtest/events/abcdef12?tail=100"
+  ```
+
+### 获取汇总指标（只读）
+- 接口名称: 获取汇总指标
+- 接口说明: 返回执行完成后计算的汇总统计（来自 summary.json）
+- 接口URL: /api/loadtest/summary/{executionId}
+- 接口方法: GET
+- 成功响应（data 为对象）
+  - total (Long)、succ (Long)、err (Long)
+  - avgRt (Double)、maxRt (Long)、minRt (Long)
+- 错误响应
+  - 404: 未找到
+- 示例
+  ```bash
+  curl http://<host>:8008/api/loadtest/summary/abcdef12
+  ```
 
 ### 健康检查
 - 接口名称: 健康检查

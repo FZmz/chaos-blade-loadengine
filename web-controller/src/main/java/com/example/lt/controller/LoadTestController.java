@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,6 +24,9 @@ public class LoadTestController {
 
     @Autowired
     private JMeterService jmeterService;
+
+    @Autowired
+    private com.example.lt.store.ExecutionStore store;
 
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<TestExecution>> startTest(@Valid @RequestBody TestExecutionRequest request) {
@@ -67,13 +71,16 @@ public class LoadTestController {
     @GetMapping("/status/{executionId}")
     public ResponseEntity<ApiResponse<TestExecution>> getTestStatus(@PathVariable String executionId) {
         try {
-            TestExecution execution = jmeterService.getTestExecution(executionId);
+            TestExecution execution = store.findById(executionId);
+            if (execution == null) {
+                execution = jmeterService.getTestExecution(executionId);
+            }
             if (execution != null) {
                 return ResponseEntity.ok(ApiResponse.success("获取测试状态成功", execution));
             } else {
                 return ResponseEntity.notFound().build();
             }
-            
+
         } catch (Exception e) {
             logger.error("获取测试状态失败: {}", executionId, e);
             return ResponseEntity.internalServerError()
@@ -84,9 +91,10 @@ public class LoadTestController {
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<Collection<TestExecution>>> listTests() {
         try {
-            Collection<TestExecution> executions = jmeterService.getAllTestExecutions();
+            // 优先读取持久化的历史记录（分页可按需调整）
+            Collection<TestExecution> executions = store.list(0, 500);
             return ResponseEntity.ok(ApiResponse.success("获取测试列表成功", executions));
-            
+
         } catch (Exception e) {
             logger.error("获取测试列表失败", e);
             return ResponseEntity.internalServerError()
@@ -144,6 +152,32 @@ public class LoadTestController {
             logger.error("健康检查失败", e);
             return ResponseEntity.internalServerError()
                 .body(ApiResponse.error("健康检查失败: " + e.getMessage()));
+        }
+    }
+
+    // 只读：获取事件流水（最近 N 条，默认 100）
+    @GetMapping("/events/{executionId}")
+    public ResponseEntity<ApiResponse<List<String>>> getEvents(
+            @PathVariable String executionId, @RequestParam(name = "tail", required = false, defaultValue = "100") int tail) {
+        try {
+            List<String> lines = store.tailEvents(executionId, tail);
+            return ResponseEntity.ok(ApiResponse.success("获取事件流水成功", lines));
+        } catch (Exception e) {
+            logger.error("获取事件失败: {}", executionId, e);
+            return ResponseEntity.internalServerError().body(ApiResponse.error("获取事件失败: " + e.getMessage()));
+        }
+    }
+
+    // 只读：获取汇总指标
+    @GetMapping("/summary/{executionId}")
+    public ResponseEntity<ApiResponse<Object>> getSummary(@PathVariable String executionId) {
+        try {
+            Object sum = store.loadSummary(executionId);
+            if (sum == null) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(ApiResponse.success("获取汇总成功", sum));
+        } catch (Exception e) {
+            logger.error("获取汇总失败: {}", executionId, e);
+            return ResponseEntity.internalServerError().body(ApiResponse.error("获取汇总失败: " + e.getMessage()));
         }
     }
 }

@@ -96,7 +96,8 @@
         <button data-tab="upload" class="active">1. 文件上传</button>
         <button data-tab="manage">2. 测试管理</button>
         <button data-tab="results">3. 结果查看</button>
-        <button data-tab="monitor">4. 系统监控</button>
+        <button data-tab="audit">4. 事件与汇总</button>
+        <button data-tab="monitor">5. 系统监控</button>
       </nav>
     </div>
   </header>
@@ -243,6 +244,29 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 事件与汇总 -->
+    <section id="audit">
+      <div class="panel">
+        <div class="row">
+          <h2 style="margin-right:auto">事件流水 & 汇总</h2>
+          <label>执行ID</label>
+          <input type="text" id="audit-id" placeholder="输入执行ID" style="max-width:240px"/>
+          <button id="btn-fetch-events">事件(tail=100)</button>
+          <button id="btn-fetch-summary">汇总</button>
+        </div>
+        <div class="grid cols-2" style="margin-top:10px">
+          <div>
+            <h3>事件（最近100条）</h3>
+            <pre id="events-json" style="white-space:pre-wrap;background:#0f1530;border:1px solid #22305e;border-radius:8px;padding:10px;overflow:auto;max-height:360px;"></pre>
+          </div>
+          <div>
+            <h3>汇总</h3>
+            <pre id="summary-json" style="white-space:pre-wrap;background:#0f1530;border:1px solid #22305e;border-radius:8px;padding:10px;overflow:auto;max-height:360px;"></pre>
+          </div>
         </div>
       </div>
     </section>
@@ -711,6 +735,28 @@
     function stopSSE(){ if (sseEvtSrc){ sseEvtSrc.close(); sseEvtSrc=null; } }
     byId('start-stream').onclick = startSSE;
     byId('stop-stream').onclick = stopSSE;
+
+
+    // ===== 事件与汇总 =====
+    byId('btn-fetch-events').onclick = async ()=>{
+      const id = byId('audit-id').value.trim();
+      if (!id) return toast('请输入执行ID', 'error');
+      try {
+        const r = await apiFetch('/loadtest/events/' + encodeURIComponent(id) + '?tail=100');
+        const lines = r.data || [];
+        byId('events-json').textContent = lines.map(x=>{
+          try { return JSON.stringify(JSON.parse(x), null, 2); } catch(e){ return x; }
+        }).join('\n');
+      } catch(e){ byId('events-json').textContent = '加载失败：' + e.message; }
+    };
+    byId('btn-fetch-summary').onclick = async ()=>{
+      const id = byId('audit-id').value.trim();
+      if (!id) return toast('请输入执行ID', 'error');
+      try {
+        const r = await apiFetch('/loadtest/summary/' + encodeURIComponent(id));
+        byId('summary-json').textContent = JSON.stringify(r.data || r, null, 2);
+      } catch(e){ byId('summary-json').textContent = '加载失败：' + e.message; }
+    };
 
 
     // 首次加载
